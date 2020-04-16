@@ -4,3 +4,10 @@
 /dockerFactorial/node_modules/*
 /react/node_modules/*
 /react/build/*
+/docker-with-pg/frontend/node_modules
+/docker-with-pg/backend/node_modules
+/dockerFactorial/node_modules
+/docker-with-pg/frontend/build/*
+/docker-with-pg/backend/build/*
+/dockerFactorial/build/*
+
