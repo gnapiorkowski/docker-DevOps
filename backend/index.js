@@ -24,7 +24,7 @@ const pgClient = new Pool({
 
 pgClient.on('error', () => console.log('No connection to PG DB'));
 
-pgClient.query('CREATE TABLE IF NOT EXISTS result(number INT)').catch(err => console.log(err));
+pgClient.query('CREATE TABLE IF NOT EXISTS results(name VARCHAR(30), number numeric(40,16))').catch(err => console.log(err));
 
 console.log(keys);
 
@@ -56,19 +56,37 @@ function calculate(req, resp) {
 		stddev = Math.sqrt(variance);
 	}
 
-	redisClient.set(`${num1}+${num2}+${num3}`, stddev)
-	resp.send(`std dev = ${stddev}`);
+    pgClient.query('INSERT INTO results (name, number) VALUES($1, $2)', [`${num1}+${num2}+${num3}`, stddev], (err, result) => {
+        if (err){
+            console.log(err);
+        } else {
+            console.log(`Cached ${stddev}`)
+        }
+    })
+	// redisClient.set(`${num1}+${num2}+${num3}`, stddev)
+	resp.send(`${stddev}`);
 }
 
 function cache(req, resp, next) {
 	const {num1, num2, num3} = req.params;
-	redisClient.get(`${num1}+${num2}+${num3}`, (err, data) => {
-		if(data !== null){
-			resp.send(`Cached standard deviation = ${data}`)
-		} else {
-			next();
-		}
-	});
+    pgClient.query('SELECT * FROM results WHERE name = $1', [`${num1}+${num2}+${num3}`], (err, result) => {
+        if(result){
+            if(result.rows.length > 0){
+                const {number} = result.rows[0];
+                resp.send(number);
+            } else {
+                next();
+            }
+                
+        }
+    });
+	// redisClient.get(`${num1}+${num2}+${num3}`, (err, data) => {
+		// if(data !== null){
+			// resp.send(`Cached standard deviation = ${data}`)
+		// } else {
+			// next();
+		// }
+	// });
 }
 
 app.get('/calculate/:num1/:num2/:num3',cache, calculate);

@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-        my-docker-frontend:
+        my-postgres-server:
                 image: 'postgres'
                 environment:
                         - POSTGRES_PASSWORD=${PGPASSWORD}
